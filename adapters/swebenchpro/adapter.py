@@ -294,7 +294,12 @@ class SWEBenchProToHarbor:
         before_cmd_lines = [
             line.strip() for line in before_cmd.split("\n") if line.strip()
         ]
-        before_cmd_docker = " && ".join(before_cmd_lines)
+        # Drop the last line — it checks out gold test files from the solution
+        # commit (e.g. git checkout {gold_commit} -- test_file.py) and should
+        # only run at verification time, not at image build time where it leaks
+        # test information to the agent.
+        before_cmd_lines = before_cmd_lines[:-1]
+        before_cmd_docker = " && ".join(before_cmd_lines) if before_cmd_lines else "true"
 
         dockerfile_tpl = read_text(self.t_dockerfile)
         dockerfile = render_literal(
